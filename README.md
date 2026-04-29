@@ -17,3 +17,12 @@ docker-compose up -d
 ### 5. 확인
 docker ps
 # crewise-mysql, crewise-redis 두 개가 보이면 성공
+
+## SQL 파일 설명
+- `sql/init/01_ddl.sql` : 테이블 DDL, 컨테이너 최초 실행 시 자동 적용
+- `sql/procedures/SP_CREATE_MINUTES.sql` : 회의록 프로시저, 수동 실행 필요
+
+## DDL 변경 시
+docker-compose down -v
+docker-compose up -d
+# 주의: -v 옵션은 DB 데이터도 전부 삭제됨 (개발 환경에서만 사용)
