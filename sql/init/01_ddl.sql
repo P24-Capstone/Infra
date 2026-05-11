@@ -45,26 +45,13 @@ CREATE TABLE `TEAM` (
 ) COMMENT = '모임';
 
 -- ============================================================
--- 4. MEMBER_SIGNUP (가입신청)
--- ============================================================
-CREATE TABLE `MEMBER_SIGNUP` (
-    `SIGNUP_ID`  BIGINT      NOT NULL AUTO_INCREMENT,
-    `TEAM_ID`    VARCHAR(10) NOT NULL COMMENT 'FK → TEAM',
-    `USER_ID`    VARCHAR(26) NOT NULL COMMENT 'FK → USER',
-    `SIGN_STATE` CHAR(1)     NOT NULL DEFAULT 'W' COMMENT 'W(대기)/A(승인)/R(거절)',
-    `REG_DTM`    VARCHAR(19) NOT NULL COMMENT '포맷: YYYY-MM-DD HH:mm:ss',
-    `PROC_DTM`   VARCHAR(19) NULL     COMMENT '처리일시 포맷: YYYY-MM-DD HH:mm:ss',
-    PRIMARY KEY (`SIGNUP_ID`)
-) COMMENT = '모임 가입신청';
-
--- ============================================================
 -- 5. MEMBER (모임원)
 -- ============================================================
 CREATE TABLE `MEMBER` (
     `MEM_ID`    VARCHAR(26) NOT NULL COMMENT 'ULID 생성(문자열 기반 난수)',
     `MEM_NIC`   VARCHAR(20) NOT NULL COMMENT '모임 내 닉네임',
     `MEM_ROLE`  CHAR(1)     NOT NULL DEFAULT 'M' COMMENT 'L(모임장)/S(서기)/M(일반멤버)',
-    `MEM_STATE` CHAR(1)     NOT NULL DEFAULT 'A' COMMENT 'A(활성)/B(강퇴)/L(탈퇴)',
+    `MEM_STATE` CHAR(1)     NOT NULL DEFAULT 'W' COMMENT 'W(대기), A(승인), R(거절)',
     `REG_DTM`   VARCHAR(19) NOT NULL COMMENT '가입일시 포맷: YYYY-MM-DD HH:mm:ss',
     `PROC_DTM`  VARCHAR(19) NULL     COMMENT '처리일시 포맷: YYYY-MM-DD HH:mm:ss',
     `USER_ID`   VARCHAR(26) NOT NULL COMMENT 'FK → USER',
@@ -258,15 +245,6 @@ CREATE TABLE `COMMENTS` (
 -- USER_IMG
 ALTER TABLE `USER_IMG`
     ADD CONSTRAINT `FK_USER_TO_USER_IMG`
-    FOREIGN KEY (`USER_ID`) REFERENCES `USER` (`USER_ID`);
-
--- MEMBER_SIGNUP
-ALTER TABLE `MEMBER_SIGNUP`
-    ADD CONSTRAINT `FK_TEAM_TO_SIGNUP`
-    FOREIGN KEY (`TEAM_ID`) REFERENCES `TEAM` (`TEAM_ID`);
-
-ALTER TABLE `MEMBER_SIGNUP`
-    ADD CONSTRAINT `FK_USER_TO_SIGNUP`
     FOREIGN KEY (`USER_ID`) REFERENCES `USER` (`USER_ID`);
 
 -- MEMBER
