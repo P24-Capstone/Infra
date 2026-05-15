@@ -2,6 +2,7 @@
 -- Crewise DB DDL
 -- MySQL 8.0
 -- 작성일: 2026-04-29
+-- 수정일: 2026-05-15
 -- ============================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -45,7 +46,7 @@ CREATE TABLE `TEAM` (
 ) COMMENT = '모임';
 
 -- ============================================================
--- 5. MEMBER (모임원)
+-- 4. MEMBER (모임원)
 -- ============================================================
 CREATE TABLE `MEMBER` (
     `MEM_ID`    VARCHAR(26) NOT NULL COMMENT 'ULID 생성(문자열 기반 난수)',
@@ -56,11 +57,12 @@ CREATE TABLE `MEMBER` (
     `PROC_DTM`  VARCHAR(19) NULL     COMMENT '처리일시 포맷: YYYY-MM-DD HH:mm:ss',
     `USER_ID`   VARCHAR(26) NOT NULL COMMENT 'FK → USER',
     `TEAM_ID`   VARCHAR(10) NOT NULL COMMENT 'FK → TEAM',
+    `USER_IMG_ID`   BIGINT  NOT NULL COMMENT 'FK → USER_IMG',
     PRIMARY KEY (`MEM_ID`)
 ) COMMENT = '모임원';
 
 -- ============================================================
--- 6. EVENTS (일정)
+-- 5. EVENTS (일정)
 -- ============================================================
 CREATE TABLE `EVENTS` (
     `EVT_ID`      BIGINT      NOT NULL AUTO_INCREMENT,
@@ -74,7 +76,7 @@ CREATE TABLE `EVENTS` (
 ) COMMENT = '일정';
 
 -- ============================================================
--- 7. NOTICES (공지사항)
+-- 6. NOTICES (공지사항)
 -- ============================================================
 CREATE TABLE `NOTICES` (
     `NOTI_ID`      BIGINT      NOT NULL AUTO_INCREMENT,
@@ -88,7 +90,7 @@ CREATE TABLE `NOTICES` (
 ) COMMENT = '공지사항';
 
 -- ============================================================
--- 8. VOTE (투표)
+-- 7. VOTE (투표)
 -- ============================================================
 CREATE TABLE `VOTE` (
     `VOTE_ID`      BIGINT      NOT NULL AUTO_INCREMENT,
@@ -105,7 +107,7 @@ CREATE TABLE `VOTE` (
 ) COMMENT = '투표';
 
 -- ============================================================
--- 9. VOTE_OPTION (투표 선택지)
+-- 8. VOTE_OPTION (투표 선택지)
 -- ============================================================
 CREATE TABLE `VOTE_OPTION` (
     `OPT_SN`      BIGINT       NOT NULL AUTO_INCREMENT COMMENT '선택지 순서 의미 있어 SN 유지',
@@ -115,40 +117,40 @@ CREATE TABLE `VOTE_OPTION` (
 ) COMMENT = '투표 선택지';
 
 -- ============================================================
--- 10. VOTE_HISTORY (투표 참여내역)
+-- 9. VOTE_HISTORY (투표 참여내역)
 -- ============================================================
 CREATE TABLE `VOTE_HISTORY` (
     `VOTE_ID` BIGINT      NOT NULL COMMENT 'FK → VOTE',
     `MEM_ID`  VARCHAR(26) NOT NULL COMMENT 'FK → MEMBER',
     `OPT_SN`  BIGINT      NOT NULL COMMENT 'FK → VOTE_OPTION',
-    PRIMARY KEY (`VOTE_ID`, `MEM_ID`) COMMENT '복합키: 중복투표 방지'
+    PRIMARY KEY (`VOTE_ID`, `MEM_ID`, `OPT_SN`) COMMENT '복합키: 중복투표 방지 (다중투표 허용)'
 ) COMMENT = '투표 참여내역';
 
 -- ============================================================
--- 11. MINUTES (AI 회의록)
+-- 10. MEETING_RECORD (AI 회의록)
 -- ============================================================
-CREATE TABLE `MINUTES` (
-    `MINUTE_ID`    BIGINT      NOT NULL AUTO_INCREMENT,
-    `MINUTE_TITLE` TEXT        NOT NULL COMMENT '트랜잭션 처리 (AI 자동생성)',
+CREATE TABLE `MEETING_RECORD` (
+    `MEETING_ID`    BIGINT      NOT NULL AUTO_INCREMENT,
+    `MEETING_TITLE` TEXT        NOT NULL COMMENT '트랜잭션 처리 (AI 자동생성)',
     `FULL_SCRIPT`  TEXT        NOT NULL COMMENT '트랜잭션 처리 (STT 결과)',
     `AI_SUMMARY`   TEXT        NOT NULL COMMENT '트랜잭션 처리 (AI 요약)',
     `REG_DTM`      VARCHAR(19) NOT NULL COMMENT '포맷: YYYY-MM-DD HH:mm:ss',
     `TEAM_ID`      VARCHAR(10) NOT NULL COMMENT 'FK → TEAM',
-    PRIMARY KEY (`MINUTE_ID`)
+    PRIMARY KEY (`MEETING_ID`)
 ) COMMENT = 'AI 회의록';
 
 -- ============================================================
--- 12. AUDIO_FILE (회의록 음성파일)
+-- 11. REC_FILE (회의록 음성파일)
 -- ============================================================
-CREATE TABLE `AUDIO_FILE` (
-    `AUDIO_FILE_ID`  BIGINT        NOT NULL AUTO_INCREMENT,
-    `MINUTE_ID`      BIGINT        NULL     COMMENT 'FK → MINUTES (트랜잭션 성공 후 연결, NULL 허용)',
-    `AUDIO_FILE_KEY` VARCHAR(1024) NOT NULL COMMENT 'S3 경로',
-    PRIMARY KEY (`AUDIO_FILE_ID`)
+CREATE TABLE `REC_FILE` (
+    `REC_FILE_ID`  BIGINT        NOT NULL AUTO_INCREMENT,
+    `MEETING_ID`      BIGINT        NULL     COMMENT 'FK → MEETING_RECORD (트랜잭션 성공 후 연결, NULL 허용)',
+    `REC_FILE_KEY` VARCHAR(1024) NOT NULL COMMENT 'S3 경로',
+    PRIMARY KEY (`REC_FILE_ID`)
 ) COMMENT = '회의록 음성파일';
 
 -- ============================================================
--- 13. MISSION (미션)
+-- 12. MISSION (미션)
 -- ============================================================
 CREATE TABLE `MISSION` (
     `MISSION_ID`      BIGINT       NOT NULL AUTO_INCREMENT,
@@ -163,16 +165,7 @@ CREATE TABLE `MISSION` (
 ) COMMENT = '미션';
 
 -- ============================================================
--- 14. MISSION_ORDER (미션 할당)
--- ============================================================
-CREATE TABLE `MISSION_ORDER` (
-    `MEM_ID`     VARCHAR(26) NOT NULL COMMENT 'FK → MEMBER',
-    `MISSION_ID` BIGINT      NOT NULL COMMENT 'FK → MISSION',
-    PRIMARY KEY (`MEM_ID`, `MISSION_ID`) COMMENT '복합키: 중복 할당 방지'
-) COMMENT = '미션 할당 (개인 미션 대상자 지정)';
-
--- ============================================================
--- 15. MISSION_VERIFY (미션 인증)
+-- 13. MISSION_VERIFY (미션 인증)
 -- ============================================================
 CREATE TABLE `MISSION_VERIFY` (
     `VERIFY_ID`      BIGINT      NOT NULL AUTO_INCREMENT,
@@ -188,7 +181,7 @@ CREATE TABLE `MISSION_VERIFY` (
 ) COMMENT = '미션 인증';
 
 -- ============================================================
--- 16. VERIFY_FILE (미션 인증 첨부파일)
+-- 14. VERIFY_FILE (미션 인증 첨부파일)
 -- ============================================================
 CREATE TABLE `VERIFY_FILE` (
     `VERIFY_FILE_ID`  BIGINT        NOT NULL AUTO_INCREMENT,
@@ -198,7 +191,7 @@ CREATE TABLE `VERIFY_FILE` (
 ) COMMENT = '미션 인증 첨부파일';
 
 -- ============================================================
--- 17. MISSION_FILE (미션 첨부파일)
+-- 15. MISSION_FILE (미션 첨부파일)
 -- ============================================================
 CREATE TABLE `MISSION_FILE` (
     `MISSION_FILE_SN`  BIGINT        NOT NULL AUTO_INCREMENT COMMENT '미션 파일 순서',
@@ -208,7 +201,7 @@ CREATE TABLE `MISSION_FILE` (
 ) COMMENT = '미션 첨부파일';
 
 -- ============================================================
--- 18. NEWS (최근소식)
+-- 16. NEWS (최근소식)
 -- ============================================================
 CREATE TABLE `NEWS` (
     `NEWS_ID`      BIGINT       NOT NULL AUTO_INCREMENT,
@@ -224,7 +217,7 @@ CREATE TABLE `NEWS` (
 ) COMMENT = '최근소식';
 
 -- ============================================================
--- 19. COMMENTS (댓글)
+-- 17. COMMENTS (댓글)
 -- 신규모임원(M), 미션인증성공(A) 소식에만 달림
 -- ============================================================
 CREATE TABLE `COMMENTS` (
@@ -255,6 +248,10 @@ ALTER TABLE `MEMBER`
 ALTER TABLE `MEMBER`
     ADD CONSTRAINT `FK_TEAM_TO_MEMBER`
     FOREIGN KEY (`TEAM_ID`) REFERENCES `TEAM` (`TEAM_ID`);
+
+ALTER TABLE `MEMBER`
+    ADD CONSTRAINT `FK_USER_IMG_TO_MEMBER`
+    FOREIGN KEY (`USER_IMG_ID`) REFERENCES `USER_IMG` (`IMG_ID`);
 
 -- EVENTS
 ALTER TABLE `EVENTS`
@@ -289,15 +286,15 @@ ALTER TABLE `VOTE_HISTORY`
     ADD CONSTRAINT `FK_OPT_TO_VOTE_HISTORY`
     FOREIGN KEY (`OPT_SN`) REFERENCES `VOTE_OPTION` (`OPT_SN`);
 
--- MINUTES
-ALTER TABLE `MINUTES`
-    ADD CONSTRAINT `FK_TEAM_TO_MINUTES`
+-- MEETING_RECORD
+ALTER TABLE `MEETING_RECORD`
+    ADD CONSTRAINT `FK_TEAM_TO_MEETING_RECORD`
     FOREIGN KEY (`TEAM_ID`) REFERENCES `TEAM` (`TEAM_ID`);
 
--- AUDIO_FILE
-ALTER TABLE `AUDIO_FILE`
-    ADD CONSTRAINT `FK_MINUTES_TO_AUDIO_FILE`
-    FOREIGN KEY (`MINUTE_ID`) REFERENCES `MINUTES` (`MINUTE_ID`);
+-- REC_FILE
+ALTER TABLE `REC_FILE`
+    ADD CONSTRAINT `FK_MEETING_RECORD_TO_REC_FILE`
+    FOREIGN KEY (`MEETING_ID`) REFERENCES `MEETING_RECORD` (`MEETING_ID`);
 
 -- MISSION
 ALTER TABLE `MISSION`
@@ -307,15 +304,6 @@ ALTER TABLE `MISSION`
 -- MISSION_FILE
 ALTER TABLE `MISSION_FILE`
     ADD CONSTRAINT `FK_MISSION_TO_MISSION_FILE`
-    FOREIGN KEY (`MISSION_ID`) REFERENCES `MISSION` (`MISSION_ID`);
-
--- MISSION_ORDER
-ALTER TABLE `MISSION_ORDER`
-    ADD CONSTRAINT `FK_MEMBER_TO_MISSION_ORDER`
-    FOREIGN KEY (`MEM_ID`) REFERENCES `MEMBER` (`MEM_ID`);
-
-ALTER TABLE `MISSION_ORDER`
-    ADD CONSTRAINT `FK_MISSION_TO_MISSION_ORDER`
     FOREIGN KEY (`MISSION_ID`) REFERENCES `MISSION` (`MISSION_ID`);
 
 -- MISSION_VERIFY
