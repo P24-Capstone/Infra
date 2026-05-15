@@ -20,6 +20,7 @@ docker ps
 
 ## SQL 파일 설명
 - `sql/init/01_ddl.sql` : 테이블 DDL, 컨테이너 최초 실행 시 자동 적용
+- `sql/init/02_dml.sql` : 샘플 데이터 DML, 컨테이너 최초 실행 시 자동 적용
 - `sql/procedures/SP_CREATE_MINUTES.sql` : 회의록 프로시저, 수동 실행 필요
 
 ## DDL 변경 시

@@ -212,8 +212,6 @@ CREATE TABLE `NEWS` (
     `NEWS_CONTENT` VARCHAR(255) NOT NULL
                    COMMENT '포맷: {닉네임}님이 모임에 가입했어요!',
     `TEAM_ID`      VARCHAR(10)  NOT NULL COMMENT 'FK → TEAM',
-    `CREATED_AT`   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`NEWS_ID`)
 ) COMMENT = '최근소식';
 
 -- ============================================================
